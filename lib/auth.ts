@@ -1,21 +1,21 @@
-import { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcrypt';
+import { prisma } from "@/lib/prisma";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import bcrypt from "bcrypt";
+import { AuthOptions, User } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 
 if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error('NEXTAUTH_SECRET is not set in environment variables');
+  throw new Error("NEXTAUTH_SECRET is not set in environment variables");
 }
 
-export const authOptions: NextAuthOptions = {
+export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: 'Credentials',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -29,7 +29,10 @@ export const authOptions: NextAuthOptions = {
 
         if (!user) return null;
 
-        const passwordMatch = await bcrypt.compare(credentials.password, user.password);
+        const passwordMatch = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
         if (!passwordMatch) return null;
 
         return {
@@ -39,7 +42,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           companyId: user.companyId,
           company: user.company?.name || null,
-        };
+        } as User;
       },
     }),
   ],
@@ -56,22 +59,27 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user = {
-          id: token.id,
+          id: token.sub || "",
+          name: token.name || "",
+          email: token.email,
           role: token.role,
-          companyId: token.companyId,
-          company: token.company,
+          companyId: token.companyId || "",
+          company: token.company || "",
         };
       }
       return session;
     },
+    async redirect({ baseUrl }) {
+      return baseUrl;
+    },
   },
   pages: {
-    signIn: '/auth/sign-in',
-    signOut: '/auth/sign-out',
-    error: '/auth/error',
+    signIn: "/auth/sign-in",
+    signOut: "/auth/sign-out",
+    error: "/auth/error",
   },
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

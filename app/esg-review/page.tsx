@@ -45,7 +45,7 @@ export default function ESGReviewPage() {
   // Check if user is admin
   useEffect(() => {
     if (sessionStatus === "authenticated") {
-      if (session?.user?.role !== "ADMIN") {
+      if (session?.user?.role !== "esg_team") {
         // Redirect non-admin users
         router.push("/dashboard")
       } else {
@@ -54,7 +54,7 @@ export default function ESGReviewPage() {
     }
   }, [sessionStatus, activeTab])
 
-  // Load submissions from API
+  // Load submissions from API  
   const loadSubmissions = async () => {
     setIsLoading(true)
     setError("")

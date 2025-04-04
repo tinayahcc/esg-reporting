@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       data: {
         type,
         status: 'PENDING',
-        data,
+        data: JSON.stringify(data),
         companyId: session.user.companyId,
         submittedById: session.user.id,
         submittedAt: new Date(),

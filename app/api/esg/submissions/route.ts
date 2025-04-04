@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -16,10 +16,8 @@ export async function GET(request: Request) {
         { status: 401 }
       );
     }
-
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type');
-    const companyId = searchParams.get('companyId');
+    const { type } = await request.json();
+    const companyId = session.user.companyId;
 
     // Build query filters
     const filters: any = {};
@@ -29,7 +27,7 @@ export async function GET(request: Request) {
     }
     
     // If user is not admin or ESG team, restrict to their company
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'ESG_TEAM') {
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'esg_team') {
       filters.companyId = session.user.companyId;
     } else if (companyId) {
       // Admin or ESG team can filter by company
@@ -52,7 +50,7 @@ export async function GET(request: Request) {
             email: true,
           },
         },
-        reviewedBy: {
+        reviewer: {
           select: {
             id: true,
             name: true,

@@ -32,11 +32,29 @@ const DATA_STATUS = {
   GOVERNANCE: false,
 }
 
+interface Submission  {
+  id: string;
+  type: "ENVIRONMENTAL" | "SOCIAL" | "GOVERNANCE";
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewerId: string | null;
+  reviewer: { name: string } | null;
+  rejectionReason: string | null;
+  companyId: string;
+  company: { name: string };
+};
+
 export default function DashboardPage() {
   const { data: session, status: sessionStatus } = useSession()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
-  const [scores, setScores] = useState({
+  const [scores, setScores] = useState<{
+    environmentalScore: number | null
+    socialScore: number | null
+    governanceScore: number | null
+    overallScore: number | null
+  }>({
     environmentalScore: null,
     socialScore: null,
     governanceScore: null,
@@ -79,14 +97,14 @@ export default function DashboardPage() {
   const loadSubmissionStatus = async () => {
     try {
       // Get all submissions
-      const submissions = await esg.getSubmissions()
+      const submissions: Submission[]  = await esg.getSubmissions()
 
       // Check if there are approved submissions for each type
-      const hasEnvironmental = submissions.some((sub) => sub.type === "ENVIRONMENTAL" && sub.status === "APPROVED")
+      const hasEnvironmental = submissions.some((sub: Submission) => sub.type === "ENVIRONMENTAL" && sub.status === "APPROVED")
 
-      const hasSocial = submissions.some((sub) => sub.type === "SOCIAL" && sub.status === "APPROVED")
+      const hasSocial = submissions.some((sub: Submission) => sub.type === "SOCIAL" && sub.status === "APPROVED")
 
-      const hasGovernance = submissions.some((sub) => sub.type === "GOVERNANCE" && sub.status === "APPROVED")
+      const hasGovernance = submissions.some((sub: Submission) => sub.type === "GOVERNANCE" && sub.status === "APPROVED")
 
       setDataStatus({
         ENVIRONMENTAL: hasEnvironmental,
